@@ -1,0 +1,6 @@
+@FairwayAPI_HostAddress = http://localhost:5147
+
+GET {{FairwayAPI_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
