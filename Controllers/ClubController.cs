@@ -33,10 +33,15 @@ namespace FairwayAPI.Controllers
         //Might just get name and use that to create club
         public ActionResult CreateClub(string clubName, string creatorId)
         {
+            User creator = _userService.GetUser(creatorId);
             Club club = new Club(clubName, creatorId);
             club.Members ??= [];
             club.Members = club.Members.Append(creatorId).ToArray();
-            _clubService.CreateClub(club);
+            string clubId = _clubService.CreateClub(club);
+
+            creator.Clubs = [.. creator.Clubs, clubId];
+            _userService.UpdateUser(creator.Id, creator);
+
             return Ok("Club successfully created");
         }
         

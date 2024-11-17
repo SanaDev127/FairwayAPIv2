@@ -15,7 +15,11 @@ namespace FairwayAPI.Services
             _clubs = database.GetCollection<Club>("Club");
         }
 
-        public void CreateClub(Club club) => _clubs.InsertOne(club);
+        public string CreateClub(Club club)
+        {
+            _clubs.InsertOne(club);
+            return club.Id;
+        }
 
         public Club GetClub(string id) => _clubs.Find(club => club.Id == id).FirstOrDefault();
 
