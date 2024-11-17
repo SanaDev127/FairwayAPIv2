@@ -27,7 +27,7 @@ namespace FairwayAPI.Controllers
             _courseService = courseService;
         }
 
-        [HttpGet("GetAllClubLeagues")]
+        [HttpPost("GetAllClubLeagues")]
         public ActionResult GetAllClubLeagues(string clubId)
         {
             List<League> leagues = _leagueService.GetAllClubLeagues(clubId);
@@ -40,7 +40,7 @@ namespace FairwayAPI.Controllers
         }
 
         // Get all league games
-        [HttpGet("GetAllLeagueGames")]
+        [HttpPost("GetAllLeagueGames")]
         public ActionResult GetAllLeagueGames(string leagueId)
         {
             List<LeagueGameReceipt> receipts = _leagueGameReceiptService.GetLeagueGameReceipts(leagueId);
@@ -57,7 +57,7 @@ namespace FairwayAPI.Controllers
         // Generate League Table
         // Generate league Table with parameters (Dates, Game threshold...)
 
-        [HttpGet("GenerateLeagueTable")]
+        [HttpPost("GenerateLeagueTable")]
         public ActionResult GenerateLeagueTable(string leagueId, string startDate = "", string endDate = "", int gameThreshold = 16)
         {
             League league = _leagueService.GetLeague(leagueId);

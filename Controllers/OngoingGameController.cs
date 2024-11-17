@@ -36,7 +36,7 @@ namespace FairwayAPI.Controllers
 
         //DisplayCourses or GetGourses or Search courses too
         // For now, returns a list of available course names. They're attached to their ids (key value pair). When user selects it, it the id is used to create the game
-        [HttpGet("GetCourseNames")]
+        [HttpPost("GetCourseNames")]
         public ActionResult GetCourseNames()
         {
             List<Course> courses = _courseService.GetAllCourses();
@@ -133,7 +133,7 @@ namespace FairwayAPI.Controllers
 
         // Get User's ongoing games
         // Maybe change how it works to look through active games and find one's user is a part of. This way you can remove active games field from user
-        [HttpGet("GetUserOngoingGames")]
+        [HttpPost("GetUserOngoingGames")]
         public ActionResult<List<OngoingGame>> GetUserOngoingGames(string id)
         {
             User user = _userService.GetUser(id);
@@ -147,7 +147,7 @@ namespace FairwayAPI.Controllers
         }
 
         //GetGame?
-        [HttpGet("GetOnGoingGame")]
+        [HttpPost("GetOnGoingGame")]
         public ActionResult GetOngoingGame(string id)
         {
             var game = _ongoingGameService.GetOngoingGame(id);
@@ -160,7 +160,7 @@ namespace FairwayAPI.Controllers
 
 
         //Generate Scorecard for active game
-        [HttpGet("GetOngoingGameScorecard")]
+        [HttpPost("GetOngoingGameScorecard")]
         public ActionResult GetOngoingGameScorecard(string gameId)
         {
             OngoingGame game = _ongoingGameService.GetOngoingGame(gameId);

@@ -41,7 +41,7 @@ namespace FairwayAPI.Controllers
         }*/
 
         // Get User's recently played games. 
-        [HttpGet("GetUserRecentGames")]
+        [HttpPost("GetUserRecentGames")]
         public ActionResult<List<Game>> GetUserRecentGames(string id)
         {
             User user = _userService.GetUser(id);
@@ -64,7 +64,7 @@ namespace FairwayAPI.Controllers
         // Get all user's games 
         // Want to be able to get games with certain participants
         // Want to be able to get games that were at a certain course
-        [HttpGet("GetAllUsersGames")]
+        [HttpPost("GetAllUsersGames")]
         public ActionResult<List<Game>> GetAllUsersGames(string id, string? sDate = null, string? eDate = null, string[]? participants = null)
         {
 
@@ -97,7 +97,7 @@ namespace FairwayAPI.Controllers
 
         }
        */
-        [HttpGet("GetUserHandicapIndex")]
+        [HttpPost("GetUserHandicapIndex")]
         public ActionResult<double> GetUserHandicapIndex(string userId)
         {
             User user = _userService.GetUser(userId);

@@ -20,14 +20,14 @@ namespace FairwayAPI.Controllers
             _userService = userService;
         }
 
-        [HttpGet("GetAllClubTransactions")]
+        [HttpPost("GetAllClubTransactions")]
         public ActionResult GetAllClubTransactions(string clubId)
         {
             List<Transaction> transactions = _transactionService.GetAllTransactions().Where(t => t.Club == clubId).ToList();
             return Ok(transactions);
         }
 
-        [HttpGet("GetAllUserTransactions")]
+        [HttpPost("GetAllUserTransactions")]
         public ActionResult GetAllUserTransactions(string userId)
         {
             List<Transaction> transactions = _transactionService.GetAllTransactions().Where(t => t.Member == userId).ToList();
@@ -41,7 +41,7 @@ namespace FairwayAPI.Controllers
             return Ok();
         }
 
-        [HttpGet("GenerateClubFinancialReport")]
+        [HttpPost("GenerateClubFinancialReport")]
         public ActionResult GenerateClubFinancialReport(string clubId, string startDate = "", string endDate = "")
         {
             Club club = _clubService.GetClub(clubId);
@@ -84,7 +84,7 @@ namespace FairwayAPI.Controllers
             return Ok(report);
         }
 
-        [HttpGet("GenerateUserFinancialReport")]
+        [HttpPost("GenerateUserFinancialReport")]
         public ActionResult GenerateUserFinancialReport(string userId, string startDate = "", string endDate = "")
         {
             User member = _userService.GetUser(userId);

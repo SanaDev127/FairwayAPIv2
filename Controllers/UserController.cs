@@ -50,7 +50,7 @@ namespace FairwayAPI.Controllers
             return Ok(player);
         }
 
-        [HttpGet("GetAllGameInvites")]
+        [HttpPost("GetAllGameInvites")]
         public ActionResult GetAllGameInvites(string playerId)
         {
             var invites = _gameInviteService.GetUserGameInvites(playerId);
@@ -122,7 +122,7 @@ namespace FairwayAPI.Controllers
             return Ok("Players have been added to each other's networks");
         }
 
-        [HttpGet("GetAllBuddies")]
+        [HttpPost("GetAllBuddies")]
         public ActionResult GetAllBuddies(string userId)
         {
             User user = _userService.GetUser(userId);
@@ -130,7 +130,7 @@ namespace FairwayAPI.Controllers
             return Ok(buddies);
         }
 
-        [HttpGet("GetUserByFirebaseId")]
+        [HttpPost("GetUserByFirebaseId")]
         public ActionResult GetUserByFirebaseId(string firebaseId)
         {
             User user = _userService.GetAllUsers().FirstOrDefault(u => u.UserID == firebaseId);
@@ -141,14 +141,14 @@ namespace FairwayAPI.Controllers
             return Ok(user);
         }
 
-        [HttpGet("GetAllUserFriendshipRequests")]
+        [HttpPost("GetAllUserFriendshipRequests")]
         public ActionResult GetAllUserFriendshipRequests(string userId)
         {
             List<FriendshipRequest> requests = _friendshipRequestService.GetAllFriendshipRequests().Where(r => r.RecipientId == userId).ToList();
             return Ok(requests);
         }
 
-        [HttpGet("GetAllUserClubs")]
+        [HttpPost("GetAllUserClubs")]
         public ActionResult GetAllUserClubs(string userId)
         {
             User player = _userService.GetUser(userId);

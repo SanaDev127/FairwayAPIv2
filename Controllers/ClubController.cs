@@ -46,7 +46,7 @@ namespace FairwayAPI.Controllers
         }
         
         // Get Club's recently played games. 
-        [HttpGet("GetClubsRecentGames")]
+        [HttpPost("GetClubsRecentGames")]
         public ActionResult GetClubsRecentGames(string clubId)
         {
             Club club = _clubService.GetClub(clubId);
@@ -67,7 +67,7 @@ namespace FairwayAPI.Controllers
         // Get all club's games (Maybe return a summary of the games for display purposes i.e. course, date, score... or this is done on client side
         // Get all club's games with query parameters i.e. date, course, participants?
         // Want to be able to get games that were at a certain course
-        [HttpGet("GetAllClubGames")]
+        [HttpPost("GetAllClubGames")]
         public ActionResult<List<Game>> GetAllClubsGames(string id, string? sDate = null, string? eDate = null)
         {
 
@@ -93,7 +93,7 @@ namespace FairwayAPI.Controllers
 
         }
         // Get all club's upcoming games? All the upcoming games for the club to create the notice board // Add an upcoming games list for club
-        [HttpGet("GetClubUpcomingGames")]
+        [HttpPost("GetClubUpcomingGames")]
         public ActionResult<List<UpcomingGame>> GetClubUpcomingGames(string clubId)
         {
             Club club = _clubService.GetClub(clubId);
@@ -113,7 +113,7 @@ namespace FairwayAPI.Controllers
         }
 
         // Get all upcoming games? All upcoming games where user has rsvp'd //RSVPing adds the game to the user's upcoming game list
-        [HttpGet("GetUsersUpcomingGames")]
+        [HttpPost("GetUsersUpcomingGames")]
         public ActionResult<List<UpcomingGame>> GetUsersUpcomingGames(string userId)
         {
             User user = _userService.GetUser(userId);
@@ -159,7 +159,7 @@ namespace FairwayAPI.Controllers
             return Ok("You have successfully RSVP'd");
         }
 
-        [HttpGet("GetAllClubMembers")]
+        [HttpPost("GetAllClubMembers")]
         public ActionResult GetAllClubMembers(string clubId)
         {
             Club club = _clubService.GetClub(clubId);
