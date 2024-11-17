@@ -74,7 +74,7 @@ namespace FairwayAPI.Controllers
             return Ok("Membership request sent successfully");
         }
 
-        [HttpGet("GetAllClubMembershipRequests")]
+        [HttpPost("GetAllClubMembershipRequests")]
         public ActionResult GetAllClubMembershipRequests(string clubId)
         {
             List<MembershipRequest> requests = _membershipRequestService.GetAllMembershipRequests().Where(r => r.Club == clubId).ToList();

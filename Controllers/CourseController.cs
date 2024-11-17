@@ -14,7 +14,7 @@ namespace FairwayAPI.Controllers
         {
             _courseService = courseService;
         }
-        [HttpGet("GetAllCourses")]
+        [HttpPost("GetAllCourses")]
         public ActionResult<List<Course>> GetAllCourses()
         {
             List<Course> courses = _courseService.GetAllCourses();
@@ -27,7 +27,7 @@ namespace FairwayAPI.Controllers
 
         }
 
-        [HttpGet("GetCourse")]
+        [HttpPost("GetCourse")]
         public ActionResult<List<Course>> GetCourse(string id)
         {
            
