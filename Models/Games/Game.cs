@@ -11,7 +11,7 @@ namespace FairwayAPI.Models.Games
         public string? Id { get; set; } = string.Empty;
 
         [BsonRepresentation(BsonType.ObjectId)]
-        public string? GameMaster { get; set; } = string.Empty;
+        public string? Organiser { get; set; } = string.Empty;
 
         [BsonRepresentation(BsonType.ObjectId)]
         public string? Course { get; set; } = string.Empty;
@@ -24,5 +24,23 @@ namespace FairwayAPI.Models.Games
         public string[]? Players { get; set; }
 
         public bool Active { get; set; }
+
+        public GameResult? Result { get; set; }
+
+        public Game(string courseId, DateTime date, string organiser, GameScorecard scorecard, string[] players, GameResult results)
+        {
+            Course = courseId;
+            Date = date;
+            Scorecard = scorecard;
+            Players = players;
+            Result = results;
+            Active = false;
+            Organiser = organiser;
+        }
+
+        public Game()
+        {
+            
+        }
     }
 }

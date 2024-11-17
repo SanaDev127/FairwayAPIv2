@@ -13,10 +13,13 @@ namespace FairwayAPI.Services
             var mongoDBClient = new MongoClient(connectionString);
             var database = mongoDBClient.GetDatabase("FairwayDB");
 
-            _users = database.GetCollection<User>("Users");
+            _users = database.GetCollection<User>("User");
         }
 
-        public void CreateUser(User user) => _users.InsertOne(user);
+        public void CreateUser(User user)
+        {
+            _users.InsertOne(user);
+        }
 
         public User GetUser(string id) => _users.Find(user => user.Id == id).FirstOrDefault();
 
@@ -26,6 +29,6 @@ namespace FairwayAPI.Services
 
         public void UpdateUser(string id, User updatedUser) => _users.ReplaceOne(user=> user.Id == id, updatedUser);
 
-        public void DeleteUser(string id) => _users.DeleteOne(id);
+        public void DeleteUser(string id) => _users.DeleteOne(user => user.Id == id);
     }
 }

@@ -5,6 +5,7 @@ namespace FairwayAPI.Models.Games
 {
     public class UpcomingGame
     {
+        [BsonId]
         [BsonRepresentation(BsonType.ObjectId)]
         public string? Id { get; set; }
 
@@ -25,5 +26,10 @@ namespace FairwayAPI.Models.Games
 
         [BsonRepresentation(BsonType.ObjectId)]
         public string? Club { get; set; }
+
+        public UpcomingGame()
+        {
+            
+        }
     }
 }

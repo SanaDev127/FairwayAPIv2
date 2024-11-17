@@ -19,6 +19,10 @@ builder.Services.AddSingleton(new OngoingGameService(connectionString));
 builder.Services.AddSingleton(new TransactionService(connectionString));
 builder.Services.AddSingleton(new UpcomingGameService(connectionString));
 builder.Services.AddSingleton(new UserService(connectionString));
+builder.Services.AddSingleton(new ClubGameReceiptService(connectionString));
+builder.Services.AddSingleton(new BuddyInviteService(connectionString));
+builder.Services.AddSingleton(new LeagueGameReceiptService(connectionString));
+builder.Services.AddSingleton(new FriendshipRequestService(connectionString));
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

@@ -13,5 +13,10 @@ namespace FairwayAPI.Models.Courses
         public Tees? Tees { get; set; }
 
         public int Handicap { get; set; }
+
+        public Hole()
+        {
+            
+        }
     }
 }

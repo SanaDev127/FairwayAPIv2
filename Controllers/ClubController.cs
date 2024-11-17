@@ -16,49 +16,61 @@ namespace FairwayAPI.Controllers
         private readonly UpcomingGameService _upcomingGameService;
         private readonly UserService _userService;
         private readonly MembershipRequestService _membershipRequestService;
+        private readonly ClubGameReceiptService _clubGameReceiptService;
 
-        public ClubController(ClubService clubService, GameService gameService, UpcomingGameService upcomingGameService, UserService userService, MembershipRequestService membershipRequestService)
+        public ClubController(ClubService clubService, GameService gameService, UpcomingGameService upcomingGameService, UserService userService, MembershipRequestService membershipRequestService, ClubGameReceiptService clubGameReceiptService)
         {
             _clubService = clubService;
             _gameService = gameService;
             _upcomingGameService = upcomingGameService;
             _userService = userService;
             _membershipRequestService = membershipRequestService;
-
+            _clubGameReceiptService = clubGameReceiptService;
         }
 
         // Create Club
         [HttpPost("CreateClub")]
-        public ActionResult CreateClub(Club club)
+        //Might just get name and use that to create club
+        public ActionResult CreateClub(string clubName, string creatorId)
         {
+            Club club = new Club(clubName, creatorId);
+            club.Members ??= [];
+            club.Members = club.Members.Append(creatorId).ToArray();
             _clubService.CreateClub(club);
-            return Ok();
+            return Ok("Club successfully created");
         }
-        // Start club game? starts a game but adds necessry club and leage details etc..
-        // Add Club Game (Adds the game to the club's list of games and to the user's list of games) (This is how to keep track of club games)
+        
         // Get Club's recently played games. 
         [HttpGet("GetClubsRecentGames")]
         public ActionResult GetClubsRecentGames(string clubId)
         {
             Club club = _clubService.GetClub(clubId);
-            var recentGameIds = club?.Games?.TakeLast(3);
+            var recentGameIds = _clubGameReceiptService.GetClubGameReceiptsByClubId(clubId)
+                .OrderByDescending(receipt => receipt.Date)
+                .TakeLast(3)
+                .Select(receipt => receipt.GameId);
+           
             if (recentGameIds == null)
             {
                 return NoContent();
             }
             var recentGames = _gameService.GetGames(recentGameIds.ToList());
+
             return Ok(recentGames);
         }
 
         // Get all club's games (Maybe return a summary of the games for display purposes i.e. course, date, score... or this is done on client side
         // Get all club's games with query parameters i.e. date, course, participants?
         // Want to be able to get games that were at a certain course
-        [HttpGet("GetAllUsersGames")]
-        public ActionResult<List<Game>> GetAllClubsGames(string id, string? sDate = null, string? eDate = null, string[]? participants = null)
+        [HttpGet("GetAllClubGames")]
+        public ActionResult<List<Game>> GetAllClubsGames(string id, string? sDate = null, string? eDate = null)
         {
 
             Club club = _clubService.GetClub(id);
-            var gameIds = club?.Games;
+            var gameIds = _clubGameReceiptService.GetAllClubGameReceipts()
+                .Where(r => r.ClubId == id)
+                .Select(r => r.GameId);
+
             if (gameIds == null)
             {
                 return NoContent();
@@ -80,25 +92,28 @@ namespace FairwayAPI.Controllers
         public ActionResult<List<UpcomingGame>> GetClubUpcomingGames(string clubId)
         {
             Club club = _clubService.GetClub(clubId);
-            var gameIds = club?.UpcomingGames;
-            if (gameIds == null)
+            //var gameIds = club?.UpcomingGames;
+            var games = _upcomingGameService.GetAllUpcomingGames()
+               .Where(g => g.Club.Equals(clubId) && g.HasSpace == true)
+               ;
+            if (games == null)
             {
                 return NoContent();
             }
-            var games = _upcomingGameService.GetUpcomingGames(gameIds.ToList())
-                .Where(g => g.HasSpace == true);
+           // var games = _upcomingGameService.GetUpcomingGames(gameIds.ToList())
+            //    .Where(g => g.HasSpace == true);
 
             return Ok(games);
 
         }
 
         // Get all upcoming games? All upcoming games where user has rsvp'd //RSVPing adds the game to the user's upcoming game list
-        [HttpGet("GetAllUsersUpcomingGames")]
+        [HttpGet("GetUsersUpcomingGames")]
         public ActionResult<List<UpcomingGame>> GetUsersUpcomingGames(string userId)
         {
             User user = _userService.GetUser(userId);
             var games = _upcomingGameService.GetAllUpcomingGames()
-                .Where(g => g.Players.Contains(userId));
+                .Where(g => g.Players.Contains(user.Id));
             if (games == null)
             {
                 return NoContent();
@@ -108,13 +123,15 @@ namespace FairwayAPI.Controllers
 
         // Create Upcoming Game
         [HttpPost("CreateUpcomingGame")]
-        public ActionResult CreateUpcomingGame(UpcomingGame game)
+        public ActionResult CreateUpcomingGame(UpcomingGame upcomingGame)
         {
-            _upcomingGameService.CreateUpcomingGame(game);
-            return Ok();
+            //Make sure the organiser's ID ends up in here too
+            _upcomingGameService.CreateUpcomingGame(upcomingGame);
+            return Ok("Upcoming Game Successfully created");
         }
 
         // RSVP to Upcoming game (Edit game details when new person rsvp's. add player and reduce number of slots)
+        // Pretty sure this works
         [HttpPut("RsvpToGame")]
         public ActionResult RsvpToGame(string userId, string gameId)
         {
@@ -122,6 +139,10 @@ namespace FairwayAPI.Controllers
 
             if (game.AvailableSlots > 0)
             {
+                if (game.Players.Contains(userId))
+                {
+                    return BadRequest("You have already rsvp'd to this game");
+                }
                 game.AvailableSlots--;
                 game.Players = game?.Players?.Append(userId).ToArray();
                 _upcomingGameService.UpdateUpcomingGame(gameId, game);
@@ -130,22 +151,22 @@ namespace FairwayAPI.Controllers
                     game.HasSpace = false;
                 }
             }
-            return Ok();
+            return Ok("You have successfully RSVP'd");
         }
 
-        // Add user to club by accepting membership request
-        [HttpPost("AcceptMembershipRequest")]
-        public ActionResult AcceptMembershipRequest(string requestId)
+        [HttpGet("GetAllClubMembers")]
+        public ActionResult GetAllClubMembers(string clubId)
         {
-            MembershipRequest request = _membershipRequestService.GetMemebershipRequest(requestId);
-            User player = _userService.GetUser(request.Player);
-            Club club = _clubService.GetClub(request.Club);
-
-            club.Members = club.Members.Append(request.Player).ToArray();
-            player.Clubs = player.Clubs.Append(request.Player).ToArray();
-            
-            _membershipRequestService.DeleteMembershipRequest(requestId);
-            return Ok();
+            Club club = _clubService.GetClub(clubId);
+            List<User> members = _userService.GetUsers([.. club.Members]);
+            return Ok(members);
         }
+
+        
+
+      
+
+        // Add new admin
+        // Get new admin details, add them to admin firebase table. Remove old admin's details. Change admin field on club
     }
 }

@@ -30,10 +30,11 @@ namespace FairwayAPI.Controllers
         [HttpGet("GetCourse")]
         public ActionResult<List<Course>> GetCourse(string id)
         {
+           
             Course course = _courseService.GetCourse(id);
             if (course == null)
             {
-                return NoContent();
+                return NotFound("No course found with that ID");
             }
 
             return Ok(course);

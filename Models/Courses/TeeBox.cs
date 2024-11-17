@@ -11,6 +11,11 @@ namespace FairwayAPI.Models.Courses
         public float? Slope { get; set; }
 
         [BsonElement("handicap")]
-        public float? Handicap { get; set; }
+        public double? Handicap { get; set; }
+
+        public TeeBox()
+        {
+            
+        }
     }
 }

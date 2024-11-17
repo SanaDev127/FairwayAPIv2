@@ -1,4 +1,5 @@
-﻿using FairwayAPI.Models.Clubs;
+﻿using FairwayAPI.Models;
+using FairwayAPI.Models.Clubs;
 using MongoDB.Driver;
 
 namespace FairwayAPI.Services
@@ -21,6 +22,10 @@ namespace FairwayAPI.Services
 
         public List<MembershipRequest> GetMembershipRequests(List<string> ids) => _membershipRequests.Find(request => ids.Contains(request.Id)).ToList();
 
-        public void DeleteMembershipRequest(string id) => _membershipRequests.DeleteOne(id);
+        public List<MembershipRequest> GetAllMembershipRequests() => _membershipRequests.Find(r => true).ToList();
+
+        public void UpdateMembershipRequest(string id, MembershipRequest request) => _membershipRequests.ReplaceOne(request => request.Id == id, request);
+
+        public void DeleteMembershipRequest(string id) => _membershipRequests.DeleteOne(request => request.Id == id);
     }
 }

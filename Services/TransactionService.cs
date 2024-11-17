@@ -18,8 +18,10 @@ namespace FairwayAPI.Services
 
         public Transaction GetTransaction(string id) => _transactions.Find(transaction => transaction.Id == id).FirstOrDefault();
 
+        public List<Transaction> GetAllTransactions() => _transactions.Find(transaction => true).ToList();
+
         public List<Transaction> GetTransactions(List<string> ids) => _transactions.Find(transaction => ids.Contains(transaction.Id)).ToList();
 
-        public void DeleteTransaction(string id) => _transactions.DeleteOne(id);
+        public void DeleteTransaction(string id) => _transactions.DeleteOne(transaction => transaction.Id == id);
     }
 }

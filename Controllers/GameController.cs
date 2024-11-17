@@ -25,7 +25,7 @@ namespace FairwayAPI.Controllers
             _gameService = gameService;
             _courseService = courseService;
         }
-
+        /*
         [HttpPost("ShowGameResults")]
         public ActionResult<GameResult> ShowGameResults(string gameId)
         {
@@ -38,19 +38,25 @@ namespace FairwayAPI.Controllers
            
             return Ok(gr);
 
-        }
+        }*/
 
         // Get User's recently played games. 
         [HttpGet("GetUserRecentGames")]
         public ActionResult<List<Game>> GetUserRecentGames(string id)
         {
             User user = _userService.GetUser(id);
+            var recentGames = _gameService.GetAllGames()
+                .Where(g => g.Players.Contains(id))
+                .TakeLast(3)
+                .ToList();
+            /*
             var recentGameIds = user?.Games?.TakeLast(3);
             if (recentGameIds == null)
             {
                 return NoContent();
             }
             var recentGames = _gameService.GetGames(recentGameIds.ToList());
+            */
             return Ok(recentGames);
 
         }
@@ -80,7 +86,7 @@ namespace FairwayAPI.Controllers
             return Ok(games);
 
         }
-       
+       /*
         [HttpGet("GetGameScorecard")]
         public ActionResult<DetailScorecard> GetGameScorecard(string gameId)
         {
@@ -90,14 +96,19 @@ namespace FairwayAPI.Controllers
             return Ok(scorecard);
 
         }
+       */
         [HttpGet("GetUserHandicapIndex")]
         public ActionResult<double> GetUserHandicapIndex(string userId)
         {
             User user = _userService.GetUser(userId);
             string[] userGameIds = user.Games;
             List<Game> userGames = _gameService.GetGames(userGameIds.ToList());
-
-            return _gameService.GetUserHandicapIndex(userId, userGames, _courseService);
+            double handicapIndex = 54.0;
+            if (userGameIds.Length > 0)
+            {
+                handicapIndex = _gameService.GetUserHandicapIndex(userId, userGames, _courseService);
+            }
+            return handicapIndex;
 
         }
 

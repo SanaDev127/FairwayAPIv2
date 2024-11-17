@@ -19,19 +19,28 @@ namespace FairwayAPI.Services
            
         }
 
-        public void CreateGame(Game game) => _games.InsertOne(game);
+        public string CreateGame(Game game)
+        {
+            _games.InsertOne(game);
+            return game.Id;
+        }
 
         public Game GetGame(string id) => _games.Find(game => game.Id == id).FirstOrDefault();
 
-        public List<Game> GetGames(List<string> ids) => _games.Find(game => ids.Contains(game.Id)).ToList(); 
+        public List<Game> GetGames(List<string> ids) => _games.Find(game => ids.Contains(game.Id)).ToList();
+
+        public List<Game> GetUserGames(string id)
+        {
+           return _games.Find(game => game.Players.Contains(id)).ToList();
+        }
 
         public List<Game> GetAllGames() => _games.Find(game => true).ToList();
 
         public void UpdateGame(string id, Game updatedGame) => _games.ReplaceOne(game => game.Id == id, updatedGame);
 
-        public void DeleteGame(string id) => _games.DeleteOne(id);
+        public void DeleteGame(string id) => _games.DeleteOne(game => game.Id == id);
 
-
+        /*
         public DetailScorecard GenerateDetailScorecard(Game game, Course course, UserService userService)
         {
            
@@ -52,7 +61,8 @@ namespace FairwayAPI.Services
             }
             return scorecard;
         }
-
+        */
+        /*
         [HttpGet("GetGameWinnerDetails")]
         public Dictionary<string, int> GetGameResults(Game game)
         {
@@ -66,10 +76,14 @@ namespace FairwayAPI.Services
 
             return scores;
         }
-
+        */
         public double GetUserHandicapIndex(string userId, List<Game> userGames, CourseService _courseService)
         {
-            if (userGames.Count >= 20)
+            if (userGames == null || userGames.Count == 0)
+            {
+                return 54.0;
+            }
+            else if (userGames.Count >= 20)
             {
                 return CalcHandicap(userGames, userId, 8, _courseService);
             }
@@ -138,7 +152,6 @@ namespace FairwayAPI.Services
         }
 
         // Get a list of score differentials for a single user having passed a number of games they were apart of
-        [HttpGet("GetUserScores")]
         public float[] getUserScores(List<Game> userGames, string userId, CourseService courseService)
         {
             float[] scores = new float[userGames.Count];
@@ -147,7 +160,7 @@ namespace FairwayAPI.Services
             {
                 int index = Array.IndexOf(game.Players, userId);
                 int[] strokes = game.Scorecard.PlayerScorecards[index].Strokes;
-                int[] points = game.Scorecard.PlayerScorecards[index].Points;
+                //int[] points = game.Scorecard.PlayerScorecards[index].Points; // Maybe Unnecessary, idk
 
                 // Getting score differential
                 var course = courseService.GetCourse(game.Course);

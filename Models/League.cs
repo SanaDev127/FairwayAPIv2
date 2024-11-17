@@ -5,6 +5,7 @@ namespace FairwayAPI.Models
 {
     public class League
     {
+        [BsonId]
         [BsonRepresentation(BsonType.ObjectId)]
         public string? Id { get; set; }
 
@@ -15,9 +16,18 @@ namespace FairwayAPI.Models
 
         public DateTime StartDate { get; set; }
 
-        [BsonRepresentation(BsonType.ObjectId)]
-        public string[]? Participants { get; set; }
+        public bool? Active { get; set; }
 
-        public bool Active { get; set; }
+        public League(string clubId, string name, DateTime startDate)
+        {
+            Club = clubId;
+            Name = name;
+            StartDate = startDate;
+            Active = true;
+        }
+        public League()
+        {
+            
+        }
     }
 }

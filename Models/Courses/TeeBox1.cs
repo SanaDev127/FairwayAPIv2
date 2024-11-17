@@ -2,7 +2,12 @@
 {
     public class TeeBox1
     {
-        public string color { get; set; }
+        public string? color { get; set; }
         public int yards { get; set; }
+
+        public TeeBox1()
+        {
+            
+        }
     }
 }

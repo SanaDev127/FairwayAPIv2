@@ -24,7 +24,7 @@ namespace FairwayAPI.Services
 
         public void UpdateUpcomingGame(string id, UpcomingGame updatedGame) => _upcomingGames.ReplaceOne(game => game.Id == id, updatedGame);
 
-        public void DeleteUpcomingGame(string id) => _upcomingGames.DeleteOne(id);
+        public void DeleteUpcomingGame(string id) => _upcomingGames.DeleteOne(game => game.Id == id);
 
     }
 }

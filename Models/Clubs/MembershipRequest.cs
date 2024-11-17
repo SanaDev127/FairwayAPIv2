@@ -5,6 +5,7 @@ namespace FairwayAPI.Models.Clubs
 {
     public class MembershipRequest
     {
+        [BsonId]
         [BsonRepresentation(BsonType.ObjectId)]
         public string? Id { get; set; }
 
@@ -17,6 +18,8 @@ namespace FairwayAPI.Models.Clubs
         public double PlayerHandicap { get; set; }
 
         public DateTime Date { get; set; }
+
+       // public bool Used { get; set; }
 
         public MembershipRequest()
         {

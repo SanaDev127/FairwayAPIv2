@@ -25,7 +25,7 @@ namespace FairwayAPI.Services
         // Should have some methods for adding and removing members I guess?
         public void UpdateClub(string id, Club updatedClub) => _clubs.ReplaceOne(club => club.Id == id, updatedClub);
 
-        public void DeleteClub(string id) => _clubs.DeleteOne(id);
+        public void DeleteClub(string id) => _clubs.DeleteOne(club => club.Id == id);
 
        
     }

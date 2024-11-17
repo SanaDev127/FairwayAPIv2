@@ -6,8 +6,9 @@ namespace FairwayAPI.Models.Courses
     public class Course
     {
         [BsonElement("_id")]
+        [BsonId]
         [BsonRepresentation(BsonType.ObjectId)]
-        public string? Id { get; set; }
+        public string? Id { get; set; } = String.Empty;
 
         [BsonElement("likes")]
         public string[]? Likes { get; set; }
@@ -65,6 +66,17 @@ namespace FairwayAPI.Models.Courses
 
         [BsonElement("__v")]
         public int? __v { get; set; }
+
+        public Course()
+        {
+            
+        }
+
+        public Course(string courseId, string courseName)
+        {
+            Id = courseId;
+            CourseName = courseName;
+        }
 
     }
 }

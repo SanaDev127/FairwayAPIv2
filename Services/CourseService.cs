@@ -1,5 +1,7 @@
 ﻿using FairwayAPI.Models.Courses;
 using MongoDB.Driver;
+using MongoDB.Bson.Serialization.Attributes;
+using MongoDB.Bson;
 
 namespace FairwayAPI.Services
 {
@@ -16,7 +18,13 @@ namespace FairwayAPI.Services
 
         public void CreateCourse(Course course) => _courses.InsertOne(course);
 
-        public Course GetCourse(string id) => _courses.Find(course => course.Id == id).FirstOrDefault();
+        public Course GetCourse(string id)
+        {
+            //BsonObjectId courseId = BsonObjectId.Create(id);
+            var courseObj = _courses.Find(course => course.Id.Equals(id)).FirstOrDefault();
+            Console.WriteLine(courseObj == null);
+            return courseObj;
+        }
 
         public List<Course> GetCourses(List<string> ids) => _courses.Find(course => ids.Contains(course.Id)).ToList();
 
@@ -24,6 +32,6 @@ namespace FairwayAPI.Services
 
         public void UpdateCourse(string id, Course updatedCourse) => _courses.ReplaceOne(course => course.Id == id, updatedCourse);
 
-        public void DeleteCourse(string id) => _courses.DeleteOne(id);
+        public void DeleteCourse(string id) => _courses.DeleteOne(course => course.Id == id);
     }
 }

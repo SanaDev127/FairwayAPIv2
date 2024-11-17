@@ -12,7 +12,7 @@ namespace FairwayAPI.Services
             var mongoDBClient = new MongoClient(connectionString);
             var database = mongoDBClient.GetDatabase("FairwayDB");
 
-            _clubInvites = database.GetCollection<ClubInvite>("ClubJnvite");
+            _clubInvites = database.GetCollection<ClubInvite>("ClubInvite");
         }
 
         public void CreateClubInvite(ClubInvite invite) => _clubInvites.InsertOne(invite);
@@ -24,7 +24,7 @@ namespace FairwayAPI.Services
 
         public List<ClubInvite> GetAllClubInvites() => _clubInvites.Find(invites => true).ToList();
 
-        public void DeleteClubInvite(string id) => _clubInvites.DeleteOne(id);
+        public void DeleteClubInvite(string id) => _clubInvites.DeleteOne(invite => invite.Id == id);
 
     }
 }
