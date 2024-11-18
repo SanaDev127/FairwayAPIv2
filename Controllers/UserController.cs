@@ -6,6 +6,11 @@ using FairwayAPI.Models.Games;
 using System.Numerics;
 using FairwayAPI.Models.Courses;
 using System.Reflection;
+using System.Diagnostics;
+using MongoDB.Bson.Serialization.Attributes;
+using MongoDB.Bson;
+using System.Text.Json;
+using FairwayAPI.Models.Inputs;
 
 namespace FairwayAPI.Controllers
 {
@@ -32,17 +37,19 @@ namespace FairwayAPI.Controllers
 
         // Create User (They're gonna be created with firebase and stored in that db, but we need to store additional details here)
         [HttpPost("CreateUser")]
-        public ActionResult CreateUser(string username, string userId, string email)
+        public ActionResult CreateUser([FromBody] CreateUserInput input)
         {
-            User newUser = new User(username, userId, email);
+            User newUser = new User(input.username, input.userId, input.email);
             _userService.CreateUser(newUser);
             return Ok();
         }
 
         [HttpPost("GetUser")]
-        public ActionResult GetUser(string userId)
+        public ActionResult GetUser([FromBody]UserIdInput input)
         {
-            User player = _userService.GetUser(userId);
+            Trace.WriteLine("Trying to see ID");
+            Trace.WriteLine(input.userId);
+            User player = _userService.GetUser(input.userId);
             if (player == null)
             {
                 return NotFound("No player found with that ID");
@@ -51,16 +58,16 @@ namespace FairwayAPI.Controllers
         }
 
         [HttpPost("GetAllGameInvites")]
-        public ActionResult GetAllGameInvites(string playerId)
+        public ActionResult GetAllGameInvites([FromBody] UserIdInput input)
         {
-            var invites = _gameInviteService.GetUserGameInvites(playerId);
+            var invites = _gameInviteService.GetUserGameInvites(input.userId);
             return Ok(invites);
         }
 
         [HttpPost("CreateBuddyInvite")]
-        public ActionResult CreateBuddyInvite(string senderId)
+        public ActionResult CreateBuddyInvite([FromBody] SenderIdInput input)
         {
-            BuddyInvite invite = new BuddyInvite(senderId);
+            BuddyInvite invite = new BuddyInvite(input.senderId);
             _buddyInviteService.CreateBuddyInvite(invite);
             if (invite.Id != null)
             {
@@ -74,15 +81,15 @@ namespace FairwayAPI.Controllers
         }
 
         [HttpPost("AcceptBuddyInvite")]
-        public ActionResult AcceptBuddyInvite(string userId, string inviteId)
+        public ActionResult AcceptBuddyInvite([FromBody] AcceptBuddyInviteInput input)
         {
-            BuddyInvite invite = _buddyInviteService.GetBuddyInvite(inviteId);
+            BuddyInvite invite = _buddyInviteService.GetBuddyInvite(input.InviteId);
 
             User sender = _userService.GetUser(invite.Sender);
-            User recipient = _userService.GetUser(userId);
+            User recipient = _userService.GetUser(input.UserId);
 
             sender.Friends ??= [];
-            if (sender.Friends.Contains(userId))
+            if (sender.Friends.Contains(input.UserId))
             {
                 return BadRequest("This person is already in your network");
             }
@@ -101,9 +108,9 @@ namespace FairwayAPI.Controllers
         }
 
         [HttpPost("AcceptFriendshipRequest")]
-        public ActionResult AcceptFriendshipRequest(string requestId)
+        public ActionResult AcceptFriendshipRequest([FromBody] RequestIdInput input)
         {
-            FriendshipRequest request = _friendshipRequestService.GetFriendshipRequest(requestId);
+            FriendshipRequest request = _friendshipRequestService.GetFriendshipRequest(input.requestId);
             User requester = _userService.GetUser(request.RequesterId);
             User recipient = _userService.GetUser(request.RecipientId);
 
@@ -117,23 +124,30 @@ namespace FairwayAPI.Controllers
             recipient.Friends = recipient_buddies.ToArray();
             _userService.UpdateUser(recipient.Id, recipient);
 
-            _friendshipRequestService.DeleteFriendshipRequest(requestId);
+            _friendshipRequestService.DeleteFriendshipRequest(input.requestId);
 
             return Ok("Players have been added to each other's networks");
         }
 
         [HttpPost("GetAllBuddies")]
-        public ActionResult GetAllBuddies(string userId)
+        public ActionResult GetAllBuddies([FromBody] UserIdInput input)
         {
-            User user = _userService.GetUser(userId);
-            List<User> buddies= _userService.GetUsers(user.Friends.ToList());
-            return Ok(buddies);
+            try
+            {
+                User user = _userService.GetUser(input.userId);
+                List<User> buddies = _userService.GetUsers(user.Friends.ToList());
+                return Ok(buddies);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
         [HttpPost("GetUserByFirebaseId")]
-        public ActionResult GetUserByFirebaseId(string firebaseId)
+        public ActionResult GetUserByFirebaseId([FromBody] FirebaseIdInput input)
         {
-            User user = _userService.GetAllUsers().FirstOrDefault(u => u.UserID == firebaseId);
+            User user = _userService.GetAllUsers().FirstOrDefault(u => u.UserID == input.firebaseId);
             if (user == null)
             {
                 return NotFound("No user found with that firebase ID");
@@ -142,16 +156,16 @@ namespace FairwayAPI.Controllers
         }
 
         [HttpPost("GetAllUserFriendshipRequests")]
-        public ActionResult GetAllUserFriendshipRequests(string userId)
+        public ActionResult GetAllUserFriendshipRequests([FromBody] UserIdInput input)
         {
-            List<FriendshipRequest> requests = _friendshipRequestService.GetAllFriendshipRequests().Where(r => r.RecipientId == userId).ToList();
+            List<FriendshipRequest> requests = _friendshipRequestService.GetAllFriendshipRequests().Where(r => r.RecipientId == input.userId).ToList();
             return Ok(requests);
         }
 
         [HttpPost("GetAllUserClubs")]
-        public ActionResult GetAllUserClubs(string userId)
+        public ActionResult GetAllUserClubs([FromBody] UserIdInput input)
         {
-            User player = _userService.GetUser(userId);
+            User player = _userService.GetUser(input.userId);
             List<Club> userClubs = _clubService.GetClubs(player.Clubs.ToList());
             return Ok(userClubs);
         }
@@ -164,4 +178,21 @@ namespace FairwayAPI.Controllers
         // Add more personal details
 
     }
+
+    public class AcceptBuddyInviteInput
+    {
+        public string UserId { get; set; }
+        public string InviteId { get; set; }
+    }
+
+    public class FirebaseIdInput
+    {
+        public string firebaseId { get; set; }
+    }
+    
+
+    
+
+
+    
 }

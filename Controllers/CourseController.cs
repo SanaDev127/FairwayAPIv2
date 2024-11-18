@@ -1,4 +1,5 @@
 ﻿using FairwayAPI.Models.Courses;
+using FairwayAPI.Models.Inputs;
 using FairwayAPI.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -14,7 +15,7 @@ namespace FairwayAPI.Controllers
         {
             _courseService = courseService;
         }
-        [HttpGet("GetAllCourses")]
+        [HttpPost("GetAllCourses")]
         public ActionResult<List<Course>> GetAllCourses()
         {
             List<Course> courses = _courseService.GetAllCourses();
@@ -27,11 +28,11 @@ namespace FairwayAPI.Controllers
 
         }
 
-        [HttpGet("GetCourse")]
-        public ActionResult<List<Course>> GetCourse(string id)
+        [HttpPost("GetCourse")]
+        public ActionResult<List<Course>> GetCourse([FromBody] GetCourseInput input)
         {
            
-            Course course = _courseService.GetCourse(id);
+            Course course = _courseService.GetCourse(input.id);
             if (course == null)
             {
                 return NotFound("No course found with that ID");
@@ -41,5 +42,10 @@ namespace FairwayAPI.Controllers
 
         }
 
+    }
+
+    public class GetCourseInput
+    {
+        public string id { get; set; }
     }
 }

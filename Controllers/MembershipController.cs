@@ -1,5 +1,6 @@
 ﻿using FairwayAPI.Models;
 using FairwayAPI.Models.Clubs;
+using FairwayAPI.Models.Inputs;
 using FairwayAPI.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -24,12 +25,12 @@ namespace FairwayAPI.Controllers
             _courseService = courseService;
             _userService = userService;
         }
-       
+
         // Generate Invite
         [HttpPost("GenerateClubInvite")]
-        public ActionResult GenerateClubInvite(string clubId, string userId)
+        public ActionResult GenerateClubInvite([FromBody] GenerateClubInviteInput input)
         {
-            ClubInvite invite = new ClubInvite(clubId, userId);
+            ClubInvite invite = new ClubInvite(input.clubId, input.userId);
             _clubInviteService.CreateClubInvite(invite);
             if (invite.Id != null)
             {
@@ -39,18 +40,18 @@ namespace FairwayAPI.Controllers
             {
                 return BadRequest("Unable to send invite");
             }
-           
+
         }
-        
+
         // Accept Club invite?
         [HttpPost("AcceptClubInvite")]
-        public ActionResult AcceptClubInvite(string userId, string inviteId)
+        public ActionResult AcceptClubInvite([FromBody] AcceptClubInviteInput input)
         {
             // Stop user from accepting if they're already in
-            ClubInvite invite = _clubInviteService.GetClubInvite(inviteId);
+            ClubInvite invite = _clubInviteService.GetClubInvite(input.inviteId);
 
             Club club = _clubService.GetClub(invite.Club);
-            User player = _userService.GetUser(userId);
+            User player = _userService.GetUser(input.userId);
             club.Members ??= [];
             if (club.Members.Contains(player.Id))
             {
@@ -62,22 +63,22 @@ namespace FairwayAPI.Controllers
             double player_handicap = 54.0;
             if (player_games.Count > 0)
             {
-                player_handicap = _gameService.GetUserHandicapIndex(userId, player_games, _courseService);
+                player_handicap = _gameService.GetUserHandicapIndex(input.userId, player_games, _courseService);
             }
 
-            MembershipRequest request = new MembershipRequest(invite.Club, userId, player_handicap);
+            MembershipRequest request = new MembershipRequest(invite.Club, input.userId, player_handicap);
 
             _membershipRequestService.CreateMembershipRequest(request);
 
-            _clubInviteService.DeleteClubInvite(inviteId);
+            _clubInviteService.DeleteClubInvite(input.inviteId);
 
             return Ok("Membership request sent successfully");
         }
 
-        [HttpGet("GetAllClubMembershipRequests")]
-        public ActionResult GetAllClubMembershipRequests(string clubId)
+        [HttpPost("GetAllClubMembershipRequests")]
+        public ActionResult GetAllClubMembershipRequests([FromBody] ClubIdInput input)
         {
-            List<MembershipRequest> requests = _membershipRequestService.GetAllMembershipRequests().Where(r => r.Club == clubId).ToList();
+            List<MembershipRequest> requests = _membershipRequestService.GetAllMembershipRequests().Where(r => r.Club == input.clubId).ToList();
             return Ok(requests);
         }
 
@@ -88,9 +89,9 @@ namespace FairwayAPI.Controllers
         // AcceptMembershipRequest
         // Add user to club by accepting membership request
         [HttpPost("AcceptMembershipRequest")]
-        public ActionResult AcceptMembershipRequest(string requestId)
+        public ActionResult AcceptMembershipRequest([FromBody] RequestIdInput input)
         {
-            MembershipRequest request = _membershipRequestService.GetMemebershipRequest(requestId);
+            MembershipRequest request = _membershipRequestService.GetMemebershipRequest(input.requestId);
             if (request.Player == null || request.Club == null)
             {
                 return BadRequest("Insufficient data in membership request");
@@ -106,10 +107,21 @@ namespace FairwayAPI.Controllers
             player.Clubs = player.Clubs.Append(request.Player).ToArray();
             _userService.UpdateUser(player.Id, player);
 
-            _membershipRequestService.DeleteMembershipRequest(requestId);
+            _membershipRequestService.DeleteMembershipRequest(input.requestId);
             return Ok("Player has successfully been added to club");
         }
-
-
     }
+
+    public class GenerateClubInviteInput
+    {
+        public string clubId { get; set; }
+        public string userId { get; set; }
+    }
+
+    public class AcceptClubInviteInput
+    {
+        public string userId { get; set; }
+        public string inviteId { get; set; }
+    }
+    
 }

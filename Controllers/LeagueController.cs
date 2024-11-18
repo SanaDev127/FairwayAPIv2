@@ -4,6 +4,7 @@ using FairwayAPI.Models.Clubs;
 using FairwayAPI.Models.Games;
 using FairwayAPI.Models;
 using FairwayAPI.Models.Leagues;
+using FairwayAPI.Models.Inputs;
 
 namespace FairwayAPI.Controllers
 {
@@ -28,9 +29,9 @@ namespace FairwayAPI.Controllers
         }
 
         [HttpPost("GetAllClubLeagues")]
-        public ActionResult GetAllClubLeagues(string clubId)
+        public ActionResult GetAllClubLeagues([FromBody] ClubIdInput input)
         {
-            List<League> leagues = _leagueService.GetAllClubLeagues(clubId);
+            List<League> leagues = _leagueService.GetAllClubLeagues(input.clubId);
             if (leagues == null)
             {
                 return NotFound("No Leagues Found for club");
@@ -41,9 +42,9 @@ namespace FairwayAPI.Controllers
 
         // Get all league games
         [HttpPost("GetAllLeagueGames")]
-        public ActionResult GetAllLeagueGames(string leagueId)
+        public ActionResult GetAllLeagueGames([FromBody] LeagueIdInput input)
         {
-            List<LeagueGameReceipt> receipts = _leagueGameReceiptService.GetLeagueGameReceipts(leagueId);
+            List<LeagueGameReceipt> receipts = _leagueGameReceiptService.GetLeagueGameReceipts(input.leagueId);
             if (receipts != null)
             {
                 List<string> gameIds = receipts.Select(r => r.GameId).ToList();
@@ -58,9 +59,9 @@ namespace FairwayAPI.Controllers
         // Generate league Table with parameters (Dates, Game threshold...)
 
         [HttpPost("GenerateLeagueTable")]
-        public ActionResult GenerateLeagueTable(string leagueId, string startDate = "", string endDate = "", int gameThreshold = 16)
+        public ActionResult GenerateLeagueTable([FromBody] GenerateLeagueTableInput input)
         {
-            League league = _leagueService.GetLeague(leagueId);
+            League league = _leagueService.GetLeague(input.leagueId);
             if (league != null)
             {
                 Club club = _clubService.GetClub(league.Club);
@@ -70,14 +71,14 @@ namespace FairwayAPI.Controllers
                     List<User> players = _userService.GetUsers(club.Members.ToList());
                     List<LeagueTableRecord> leagueTableRecords = new List<LeagueTableRecord>();
 
-                    List<LeagueGameReceipt> receipts = _leagueGameReceiptService.GetLeagueGameReceipts(leagueId);
+                    List<LeagueGameReceipt> receipts = _leagueGameReceiptService.GetLeagueGameReceipts(input.leagueId);
                     List<Game> leagueGames = _gameService.GetGames(
                         receipts.Select(r => r.GameId).ToList()
                         );
 
-                    if (!startDate.Equals("") && !endDate.Equals(""))
+                    if (!input.startDate.Equals("") && !input.endDate.Equals(""))
                     {
-                        leagueGames = leagueGames.Where(g => g.Date >= DateTime.Parse(startDate) && g.Date <= DateTime.Parse(endDate)).ToList();
+                        leagueGames = leagueGames.Where(g => g.Date >= DateTime.Parse(input.startDate) && g.Date <= DateTime.Parse(input.endDate)).ToList();
                     }
 
                     // Get all games user was part of in league, count num games, get points from top 16 games using game result
@@ -99,9 +100,9 @@ namespace FairwayAPI.Controllers
                             }
 
                             playerResults = playerResults.OrderBy(r => r.Points).ToList();
-                            if (playerResults.Count > gameThreshold)
+                            if (playerResults.Count > input.gameThreshold)
                             {
-                                playerResults = playerResults.Take(gameThreshold).ToList();
+                                playerResults = playerResults.Take(input.gameThreshold).ToList();
                             }
                             totalPoints = playerResults.Sum(r => r.Points);
                             playerHandicap = _gameService.GetUserHandicapIndex(user.Id, playerGames, _courseService);
@@ -122,9 +123,9 @@ namespace FairwayAPI.Controllers
 
         // Start League
         [HttpPost("StartLeague")]
-        public ActionResult StartLeague(string clubId, string name, string startDate)
+        public ActionResult StartLeague([FromBody] StartLeagueInput input)
         {
-            League league = new League(clubId, name, DateTime.Parse(startDate));
+            League league = new League(input.clubId, input.name, DateTime.Parse(input.startDate));
             _leagueService.CreateLeague(league);
 
             return Ok("League successfully created");
@@ -133,17 +134,32 @@ namespace FairwayAPI.Controllers
         // Close league
         // Not sure if this is necessary or if it should just automatically close when end date arrives
         [HttpPost("CloseLeague")]
-        public ActionResult EndLeague(string leagueId)
+        public ActionResult EndLeague([FromBody] LeagueIdInput input)
         {
-            League league = _leagueService.GetLeague(leagueId);
+            League league = _leagueService.GetLeague(input.leagueId);
             if (league == null)
             {
                 return NotFound("Can't find league with that ID");
             }
             league.Active = false;
-            _leagueService.UpdateLeague(leagueId, league);
+            _leagueService.UpdateLeague(input.leagueId, league);
             return Ok("League successfullly closed");
         }
        
+    }
+
+    public class GenerateLeagueTableInput
+    {
+        public string leagueId { get; set; }
+        public string startDate { get; set; } = "";
+        public string endDate { get; set; } = "";
+        public int gameThreshold { get; set; } = 16;
+    }
+
+    public class StartLeagueInput
+    {
+        public string clubId { get; set; }
+        public string name { get; set; }
+        public string startDate { get; set; }
     }
 }

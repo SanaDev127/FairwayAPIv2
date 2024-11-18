@@ -6,6 +6,7 @@ using FairwayAPI.Models.Games;
 using FairwayAPI.Models;
 using FairwayAPI.Models.Clubs;
 using System.Linq;
+using FairwayAPI.Models.Inputs;
 
 namespace FairwayAPI.Controllers
 {
@@ -54,39 +55,39 @@ namespace FairwayAPI.Controllers
         //StartGame
         [HttpPost("StartGame")]
         // Pressing the start game button on the club site will pass the club id as a parameter, through that we'll know if it's a club game or not
-        public ActionResult<string> StartGame(string organiserId, string courseId, string[]? invitees, string clubId = "")
+        public ActionResult<string> StartGame([FromBody] StartGameInput input)
         {
-            Course course = _courseService.GetCourse(courseId);
+            Course course = _courseService.GetCourse(input.courseId);
             OngoingGame game;
-            User game_organiser = _userService.GetUser(organiserId);
+            User game_organiser = _userService.GetUser(input.organiserId);
 
-            if (invitees == null || invitees.Length == 0)
+            if (input.invitees == null || input.invitees.Length == 0)
             {
                 game = new(game_organiser, course);
             }
             else
             {
-                game = new OngoingGame(game_organiser, invitees, course);
+                game = new OngoingGame(game_organiser, input.invitees, course);
             }
 
-            double organiser_handicap = _gameService.GetUserHandicapIndex(organiserId, _gameService.GetUserGames(organiserId), _courseService);
+            double organiser_handicap = _gameService.GetUserHandicapIndex(input.organiserId, _gameService.GetUserGames(input.organiserId), _courseService);
             game.PlayerHandicaps ??= [];
             game.PlayerHandicaps = [.. game.PlayerHandicaps, organiser_handicap];
             game.Scorecard.Players = [.. game.Scorecard.Players, game_organiser];
 
             string gameId = _ongoingGameService.CreateOngoingGame(game);
-            if (invitees != null && invitees.Length > 0)
+            if (input.invitees != null && input.invitees.Length > 0)
             {
-                foreach (string playerId in invitees)
+                foreach (string playerId in input.invitees)
                 {
                     // In future figure out a way to send push notification
                     GameInvite invite = new GameInvite(gameId, playerId);
                     _gameInviteService.CreateGameInvite(invite);
                 }
             }
-            if (!clubId.Equals("") && clubId != null)
+            if (!input.clubId.Equals("") && input.clubId != null)
             {
-                ClubGameReceipts receipt = new ClubGameReceipts(clubId, gameId, game.StartTime);
+                ClubGameReceipts receipt = new ClubGameReceipts(input.clubId, gameId, game.StartTime);
                 _clubGameReceiptService.CreateClubGameReceipt(receipt);
             }
             game_organiser.ActiveGames ??= [];
@@ -98,9 +99,9 @@ namespace FairwayAPI.Controllers
 
         // Join game after receiving an invite. Also need method to send invite
         [HttpPost("AcceptGameInvite")]
-        public ActionResult AcceptGameInvite(string inviteId)
+        public ActionResult AcceptGameInvite([FromBody] InviteIdInput input)
         {
-            GameInvite invite = _gameInviteService.GetGameInvite(inviteId);
+            GameInvite invite = _gameInviteService.GetGameInvite(input.inviteId);
             OngoingGame game = _ongoingGameService.GetOngoingGame(invite.GameID);
             User player = _userService.GetUser(invite.RecipientID);
 
@@ -134,9 +135,9 @@ namespace FairwayAPI.Controllers
         // Get User's ongoing games
         // Maybe change how it works to look through active games and find one's user is a part of. This way you can remove active games field from user
         [HttpPost("GetUserOngoingGames")]
-        public ActionResult<List<OngoingGame>> GetUserOngoingGames(string id)
+        public ActionResult<List<OngoingGame>> GetUserOngoingGames([FromBody] IdInput input)
         {
-            User user = _userService.GetUser(id);
+            User user = _userService.GetUser(input.id);
             var activeGameIds = user.ActiveGames;
             if (activeGameIds == null)
             {
@@ -148,9 +149,9 @@ namespace FairwayAPI.Controllers
 
         //GetGame?
         [HttpPost("GetOnGoingGame")]
-        public ActionResult GetOngoingGame(string id)
+        public ActionResult GetOngoingGame([FromBody] IdInput input)
         {
-            var game = _ongoingGameService.GetOngoingGame(id);
+            var game = _ongoingGameService.GetOngoingGame(input.id);
             if (game == null)
             {
                 return NotFound("No ongoing game found");
@@ -161,9 +162,9 @@ namespace FairwayAPI.Controllers
 
         //Generate Scorecard for active game
         [HttpPost("GetOngoingGameScorecard")]
-        public ActionResult GetOngoingGameScorecard(string gameId)
+        public ActionResult GetOngoingGameScorecard([FromBody] GameIdInput input)
         {
-            OngoingGame game = _ongoingGameService.GetOngoingGame(gameId);
+            OngoingGame game = _ongoingGameService.GetOngoingGame(input.gameId);
             DetailScorecard scorecard = _ongoingGameService.GetOngoingGameScorecard(game);
             return Ok(scorecard);
 
@@ -171,7 +172,7 @@ namespace FairwayAPI.Controllers
 
         //Update Ongoing Game
         [HttpPut("UpdateOngoingGame")]
-        public ActionResult UpdateOngoingGame(OngoingGame game)
+        public ActionResult UpdateOngoingGame([FromBody] OngoingGame game)
         {
             _ongoingGameService.UpdateOngoingGame(game.Id, game);
             return Ok();
@@ -179,9 +180,9 @@ namespace FairwayAPI.Controllers
 
         //EndGame
         [HttpPost("SaveGame")]
-        public ActionResult SaveGame(string gameId)
+        public ActionResult SaveGame([FromBody] GameIdInput input)
         {
-            OngoingGame game = _ongoingGameService.GetOngoingGame(gameId);
+            OngoingGame game = _ongoingGameService.GetOngoingGame(input.gameId);
             
             // End websocket connection
             var player_ids = new List<string>();
@@ -190,12 +191,12 @@ namespace FairwayAPI.Controllers
                 User user = _userService.GetUser(player.Id);
                 // May be unnecessary if I decide not to have the games field on a user
                 user.Games ??= [];
-                user.Games = user.Games.Append(gameId).ToArray();
+                user.Games = user.Games.Append(input.gameId).ToArray();
 
                 // Ugly. Must remove active games field
                 user.ActiveGames ??= [];
                 List<string> active_games = [.. user.ActiveGames];
-                bool removed = active_games.Remove(gameId);
+                bool removed = active_games.Remove(input.gameId);
                 if (removed)
                 {
                     user.ActiveGames = [.. active_games];
@@ -234,11 +235,11 @@ namespace FairwayAPI.Controllers
 
             string newGameId = _gameService.CreateGame(newGame);
 
-            if (_clubGameReceiptService.GetClubGameReceiptByGameID(gameId) != null)
+            if (_clubGameReceiptService.GetClubGameReceiptByGameID(input.gameId) != null)
             {
-                ClubGameReceipts gameReceipt = _clubGameReceiptService.GetClubGameReceiptByGameID(gameId);
+                ClubGameReceipts gameReceipt = _clubGameReceiptService.GetClubGameReceiptByGameID(input.gameId);
                 Console.WriteLine("Debugging");
-                Console.WriteLine($"Old Game ID: {gameId}");
+                Console.WriteLine($"Old Game ID: {input.gameId}");
                 Console.WriteLine($"New Game ID: {newGameId}");
                 gameReceipt.GameId = newGameId;
                 _clubGameReceiptService.UpdateClubGameReceipt(gameReceipt.Id, gameReceipt);
@@ -257,6 +258,13 @@ namespace FairwayAPI.Controllers
 
         }
 
+    }
 
+    public class StartGameInput
+    {
+        public string organiserId { get; set; }
+        public string courseId { get; set; }
+        public string[]? invitees { get; set; }
+        public string clubId { get; set; } = "";
     }
 }

@@ -1,5 +1,6 @@
 ﻿using FairwayAPI.Models;
 using FairwayAPI.Models.Clubs;
+using FairwayAPI.Models.Inputs;
 using FairwayAPI.Services;
 using Microsoft.AspNetCore.Mvc;
 using static MongoDB.Bson.Serialization.Serializers.SerializerHelper;
@@ -21,36 +22,36 @@ namespace FairwayAPI.Controllers
         }
 
         [HttpPost("GetAllClubTransactions")]
-        public ActionResult GetAllClubTransactions(string clubId)
+        public ActionResult GetAllClubTransactions([FromBody] ClubIdInput input)
         {
-            List<Transaction> transactions = _transactionService.GetAllTransactions().Where(t => t.Club == clubId).ToList();
+            List<Transaction> transactions = _transactionService.GetAllTransactions().Where(t => t.Club == input.clubId).ToList();
             return Ok(transactions);
         }
 
         [HttpPost("GetAllUserTransactions")]
-        public ActionResult GetAllUserTransactions(string userId)
+        public ActionResult GetAllUserTransactions([FromBody] UserIdInput input)
         {
-            List<Transaction> transactions = _transactionService.GetAllTransactions().Where(t => t.Member == userId).ToList();
+            List<Transaction> transactions = _transactionService.GetAllTransactions().Where(t => t.Member == input.userId).ToList();
             return Ok(transactions);
         }
 
         [HttpPost("CreateTransaction")]
-        public ActionResult CreateTransaction(Transaction transaction)
+        public ActionResult CreateTransaction([FromBody]Transaction transaction)
         {
             _transactionService.CreateTransaction(transaction);
             return Ok();
         }
 
         [HttpPost("GenerateClubFinancialReport")]
-        public ActionResult GenerateClubFinancialReport(string clubId, string startDate = "", string endDate = "")
+        public ActionResult GenerateClubFinancialReport([FromBody] ClubFinancialReportInput input)
         {
-            Club club = _clubService.GetClub(clubId);
+            Club club = _clubService.GetClub(input.clubId);
             List<User> members = _userService.GetUsers(club.Members.ToList());
-            List<Transaction> transactions = _transactionService.GetAllTransactions().Where(t => t.Club == clubId).ToList();
+            List<Transaction> transactions = _transactionService.GetAllTransactions().Where(t => t.Club == input.clubId).ToList();
 
-            if (!startDate.Equals("") && !endDate.Equals(""))
+            if (!input.startDate.Equals("") && !input.endDate.Equals(""))
             {
-                transactions = transactions.Where(t => t.Date >= DateTime.Parse(startDate) && t.Date <= DateTime.Parse(endDate)).ToList();
+                transactions = transactions.Where(t => t.Date >= DateTime.Parse(input.startDate) && t.Date <= DateTime.Parse(input.endDate)).ToList();
             }
 
             int totalTransactions = transactions.Count;
@@ -85,13 +86,13 @@ namespace FairwayAPI.Controllers
         }
 
         [HttpPost("GenerateUserFinancialReport")]
-        public ActionResult GenerateUserFinancialReport(string userId, string startDate = "", string endDate = "")
+        public ActionResult GenerateUserFinancialReport([FromBody] UserFinancialReportInput input)
         {
-            User member = _userService.GetUser(userId);
-            List<Transaction> transactions = _transactionService.GetAllTransactions().Where(t => t.Member == userId).ToList();
-            if (!startDate.Equals("") && !endDate.Equals(""))
+            User member = _userService.GetUser(input.userId);
+            List<Transaction> transactions = _transactionService.GetAllTransactions().Where(t => t.Member == input.userId).ToList();
+            if (!input.startDate.Equals("") && !input.endDate.Equals(""))
             {
-                transactions = transactions.Where(t => t.Date >= DateTime.Parse(startDate) && t.Date <= DateTime.Parse(endDate)).ToList();
+                transactions = transactions.Where(t => t.Date >= DateTime.Parse(input.startDate) && t.Date <= DateTime.Parse(input.endDate)).ToList();
             }
 
             double debit = 0;
@@ -111,5 +112,19 @@ namespace FairwayAPI.Controllers
             TransactionReport report = new TransactionReport(record);
             return Ok(report);
         }
+    }
+
+    public class ClubFinancialReportInput
+    {
+        public string clubId { get; set; }
+        public string startDate { get; set; } = "";
+        public string endDate { get; set; } = "";
+    }
+
+    public class UserFinancialReportInput
+    {
+        public string userId { get; set; }
+        public string startDate { get; set; } = "";
+        public string endDate { get; set; } = "";
     }
 }

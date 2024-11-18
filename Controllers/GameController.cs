@@ -1,6 +1,7 @@
 ﻿using FairwayAPI.Models;
 using FairwayAPI.Models.Courses;
 using FairwayAPI.Models.Games;
+using FairwayAPI.Models.Inputs;
 using FairwayAPI.Services;
 using Microsoft.AspNetCore.Cors.Infrastructure;
 using Microsoft.AspNetCore.Mvc;
@@ -65,10 +66,10 @@ namespace FairwayAPI.Controllers
         // Want to be able to get games with certain participants
         // Want to be able to get games that were at a certain course
         [HttpPost("GetAllUsersGames")]
-        public ActionResult<List<Game>> GetAllUsersGames(string id, string? sDate = null, string? eDate = null, string[]? participants = null)
+        public ActionResult<List<Game>> GetAllUsersGames([FromBody] GetAllUserGamesInput input)
         {
 
-            User user = _userService.GetUser(id);
+            User user = _userService.GetUser(input.id);
             var gameIds = user?.Games;
             if (gameIds == null)
             {
@@ -76,10 +77,10 @@ namespace FairwayAPI.Controllers
             }
             var games = _gameService.GetGames(gameIds.ToList());
 
-            if (sDate != null && eDate != null)
+            if (input.sDate != null && input.eDate != null)
             {
-                var startDate = DateTime.Parse(sDate);
-                var endDate = DateTime.Parse(eDate);
+                var startDate = DateTime.Parse(input.sDate);
+                var endDate = DateTime.Parse(input.eDate);
                 games = games.Where(g => g.Date >= startDate && g.Date <= endDate).ToList();
             }
 
@@ -98,20 +99,28 @@ namespace FairwayAPI.Controllers
         }
        */
         [HttpPost("GetUserHandicapIndex")]
-        public ActionResult<double> GetUserHandicapIndex(string userId)
+        public ActionResult<double> GetUserHandicapIndex([FromBody] UserIdInput input)
         {
-            User user = _userService.GetUser(userId);
+            User user = _userService.GetUser(input.userId);
             string[] userGameIds = user.Games;
             List<Game> userGames = _gameService.GetGames(userGameIds.ToList());
             double handicapIndex = 54.0;
             if (userGameIds.Length > 0)
             {
-                handicapIndex = _gameService.GetUserHandicapIndex(userId, userGames, _courseService);
+                handicapIndex = _gameService.GetUserHandicapIndex(input.userId, userGames, _courseService);
             }
             return handicapIndex;
 
         }
 
+    }
+
+    public class GetAllUserGamesInput
+    {
+        public string id {get; set;}
+        public string? sDate { get; set; } = null;
+        public string? eDate { get; set; } = null;
+        public string[]? participants { get; set; } = null;
 
     }
 }
