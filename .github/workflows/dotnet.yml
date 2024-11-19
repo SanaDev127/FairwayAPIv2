@@ -23,6 +23,6 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore ./FairwayAPI.sln
     - name: Build
-      run: dotnet build ./FairwayAPI.sln --no-restore
+      run: dotnet build FairwayAPI.sln --no-restore
     - name: Test
-      run: dotnet test ./FairwayAPI.Tests/FairwayAPI.Tests.csproj --no-build --verbosity normal
+      run: dotnet test FairwayAPI.Tests/FairwayAPI.Tests.csproj --no-build --verbosity normal
