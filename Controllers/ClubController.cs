@@ -167,10 +167,6 @@ namespace FairwayAPI.Controllers
             return Ok(members);
         }
 
-        
-
-      
-
         // Add new admin
         // Get new admin details, add them to admin firebase table. Remove old admin's details. Change admin field on club
     }

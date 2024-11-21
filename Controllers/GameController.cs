@@ -26,21 +26,7 @@ namespace FairwayAPI.Controllers
             _gameService = gameService;
             _courseService = courseService;
         }
-        /*
-        [HttpPost("ShowGameResults")]
-        public ActionResult<GameResult> ShowGameResults(string gameId)
-        {
-            Game game = _gameService.GetGame(gameId);
-            Course course = _courseService.GetCourse(game.Course);
-
-            DetailScorecard sc = _gameService.GenerateDetailScorecard(game, course, _userService);
-            Dictionary<string, int> scores = _gameService.GetGameResults(game);
-            GameResult  gr = new GameResult(scores, sc);
-           
-            return Ok(gr);
-
-        }*/
-
+       
         // Get User's recently played games. 
         [HttpPost("GetUserRecentGames")]
         public ActionResult<List<Game>> GetUserRecentGames(string id)
@@ -50,14 +36,7 @@ namespace FairwayAPI.Controllers
                 .Where(g => g.Players.Contains(id))
                 .TakeLast(3)
                 .ToList();
-            /*
-            var recentGameIds = user?.Games?.TakeLast(3);
-            if (recentGameIds == null)
-            {
-                return NoContent();
-            }
-            var recentGames = _gameService.GetGames(recentGameIds.ToList());
-            */
+           
             return Ok(recentGames);
 
         }
@@ -87,17 +66,7 @@ namespace FairwayAPI.Controllers
             return Ok(games);
 
         }
-       /*
-        [HttpGet("GetGameScorecard")]
-        public ActionResult<DetailScorecard> GetGameScorecard(string gameId)
-        {
-            Game game = _gameService.GetGame(gameId);
-            Course course = _courseService.GetCourse(game.Course);
-            DetailScorecard scorecard = _gameService.GenerateDetailScorecard(game, course, _userService);
-            return Ok(scorecard);
-
-        }
-       */
+      
         [HttpPost("GetUserHandicapIndex")]
         public ActionResult<double> GetUserHandicapIndex([FromBody] UserIdInput input)
         {
