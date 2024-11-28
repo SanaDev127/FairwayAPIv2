@@ -10,4 +10,7 @@
 ## Technology
 - This is a RESTful API created using C#
 - It interacts with a MongoDB database
+
+### Note
+- This was initially a school project created using my school github account that I am continuing on my personal repository
   
